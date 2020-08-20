@@ -5,8 +5,8 @@ These folders contain:
 	- posterior parameters
 	- simmap cutoff 0.3 
 	- simmap cutoff 0.5
-        - simmap cutoff 0.7
-        - heatmap
-        - phenogram cutoff 0.3
-        - phenogram cutoff 0.5
-        - phenogram cutoff 0.7
+	- simmap cutoff 0.7
+	- heatmap
+	- phenogram cutoff 0.3
+	- phenogram cutoff 0.5
+	- phenogram cutoff 0.7
