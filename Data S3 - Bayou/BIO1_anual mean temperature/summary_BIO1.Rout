@@ -1,0 +1,29 @@
+bayou MCMC chain: 1000001 generations
+700020 samples, first 0 samples discarded as burnin
+
+
+Summary statistics for parameters:
+                    Mean        SD    Naive SE Time-series SE Effective Size
+lnL        -5505.4691541  1.031036 0.001232306     0.02343152      1936.1848
+prior       -379.1128132 57.125604 0.068277181     1.71196590      1113.4517
+alpha          0.1619232  1.843296 0.002203129     0.01412391     17032.5703
+sig2           0.3516853  2.173774 0.002598120     0.02232770      9478.5281
+k             35.2465315  5.925810 0.007082597     0.17848425      1102.2895
+ntheta        36.2465315  5.925810 0.007082597     0.17848425      1102.2895
+root.theta    96.3852558 11.234709 0.013427853     0.47022912       570.8271
+all theta     78.6738302 90.261168          NA             NA             NA
+              HPD95Lower   HPD95Upper
+lnL        -5.507811e+03 -5503.641286
+prior      -4.923162e+02  -269.849747
+alpha       1.434585e-06     0.415787
+sig2        5.557511e-08     1.100096
+k           2.300000e+01    46.000000
+ntheta      2.400000e+01    47.000000
+root.theta  7.767624e+01   119.399542
+all theta             NA           NA
+
+
+Branches with posterior probabilities higher than 0.1:
+[1] pp                  magnitude.of.theta2 naive.SE.of.theta2 
+[4] rel.location       
+<0 rows> (or 0-length row.names)
