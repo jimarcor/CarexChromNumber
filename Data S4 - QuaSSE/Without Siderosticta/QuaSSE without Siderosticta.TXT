@@ -1,0 +1,32 @@
+CAREX SIN SIDEROSTICTA
+
+> chrom.anova3
+                     Df   lnLik    AIC  ChiSq Pr(>|Chi|)    
+minimal               3 -3693.5 7393.1                      
+OU.constant.constant  4 -3693.5 7395.1  0.000  0.9990220    
+BM.linear.constant    4 -3673.9 7355.9 39.231  3.765e-10 ***
+BM.constant.linear    4 -3680.2 7368.4 26.675  2.408e-07 ***
+OU.linear.constant    5 -3673.2 7356.5 40.611  1.519e-09 ***
+OU.constant.linear    5 -3679.5 7369.0 28.112  7.861e-07 ***
+BM.sigmoid.constant   6 -3673.8 7359.5 39.552  1.326e-08 ***
+OU.sigmoid.constant   7 -3670.7 7355.4 45.679  2.872e-09 ***
+BM.constant.sigmoid   6 -3685.0 7382.0 17.054  0.0006888 ***
+OU.constant.sigmoid   7 -3665.2 7344.4 56.648  1.466e-11 ***
+BM.hump.constant      6 -3680.6 7373.2 25.877  1.012e-05 ***
+OU.hump.constant      7 -3680.4 7374.8 26.263  2.801e-05 ***
+BM.constant.hump      6 -3687.8 7387.6 11.501  0.0093049 ** 
+OU.constant.hump      7 -3687.0 7387.9 13.181  0.0104255 *  
+BM.hump.linear        7 -3671.1 7356.1 44.959  4.054e-09 ***
+BM.hump.sigmoid       9 -3673.5 7364.9 40.151  4.253e-07 ***
+BM.linear.linear      5 -3673.1 7356.1 40.985  1.260e-09 ***
+BM.linear.sigmoid     7 -3673.9 7361.8 39.335  5.939e-08 ***
+BM.sigmoid.linear     7 -3674.9 7363.9 37.200  1.638e-07 ***
+BM.sigmoid.sigmoid    9 -3660.0 7338.1 67.028  1.661e-12 ***
+OU.hump.linear        8 -3671.0 7358.0 45.077  1.399e-08 ***
+OU.hump.sigmoid      10 -3667.7 7355.5 51.643  6.866e-09 ***
+OU.linear.linear      6 -3673.0 7357.9 41.176  6.001e-09 ***
+OU.linear.sigmoid     8 -3671.7 7359.5 43.600  2.792e-08 ***
+OU.sigmoid.linear     8 -3665.2 7346.3 56.755  5.681e-11 ***
+OU.sigmoid.sigmoid   10 -3657.7 7335.5 71.618  6.953e-13 ***
+---
+Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1

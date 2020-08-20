@@ -1,0 +1,258 @@
+
+
+```{r}
+
+library(ape)
+
+#opening tree
+phy <- read.tree("Alldata_constrained_3fossil.tree")
+phy
+length(phy$tip.label)
+is.ultrametric(phy)
+plot(phy, show.tip.label=F)
+
+#it is not ultrametric, see this post
+library(phytools)
+library(phangorn)
+## compute the NNLS ultrametric tree
+phy<-nnls.tree(cophenetic(phy),phy,rooted=TRUE)
+## check
+is.ultrametric(phy)
+
+#Now we are making the tree dichotomous
+phy <- multi2di(phy)
+is.ultrametric(phy)
+is.rooted(phy)
+
+
+#Loading the data
+mydata <- read.csv("data_tot.csv", sep= ";", dec=",")
+mydata
+
+
+#Pruning the tree
+
+tips.to.remove <- setdiff(phy$tip.label, mydata[,1])
+phy <- drop.tip(phy, tips.to.remove)
+setdiff(phy$tip.label, mydata[,1]) 
+
+
+#Setting the character
+states <- mydata[,4] 
+names(states) = mydata[,1]
+states
+
+#Setting the character variation
+sd <- mydata[,23]
+names(sd) = mydata[,1]
+sd
+
+save.image(file="myEnvironment.RData")
+
+```
+
+
+#Quasse analyses
+
+```{r}
+
+load(file="myEnvironment.RData")
+
+library(diversitree)
+
+p <- starting.point.quasse(phy, states)
+p
+
+xr <- range(states) + c(-1, 1) * 20 * p["diffusion"]
+xr
+
+linear.x <- make.linear.x(xr[1], xr[2])
+make <- function(lambda, mu) make.quasse(phy, states, sd, lambda, mu, sampling.f=0.36)
+nodrift <- function(f) constrain(f, drift ~ 0)
+f.c.c <- make(constant.x, constant.x)
+f.l.c <- make(linear.x, constant.x)
+f.s.c <- make(sigmoid.x, constant.x) 
+f.h.c <- make(noroptimal.x, constant.x) 
+ 
+
+control <- list(parscale = 0.1, reltol = 0.001)
+chrom.mle.c.c <- find.mle(nodrift(f.c.c), p, lower = 0, control = control, verbose = 0)
+
+
+
+p.c <- chrom.mle.c.c$par
+p.c
+p.l.c <- c(p.c[1], l.m = 0, p.c[2:3])
+p.l.c
+p.s.c <- c(p.c[1], p.c[1], mean(states), 1, p.c[2:3])
+p.s.c
+p.h.c <- c(p.c[1], p.c[1], mean(states), 1, p.c[2:3])
+p.h.c
+
+chrom.mle.d.c.c <- find.mle(f.c.c, coef(chrom.mle.c.c, TRUE), control = control, verbose = 0)
+chrom.mle.l.c <- find.mle(nodrift(f.l.c), p.l.c, control = control, verbose = 0)
+chrom.mle.d.l.c <- find.mle(f.l.c, coef(chrom.mle.l.c, TRUE), control = control, verbose = 0)
+chrom.mle.s.c <- find.mle(nodrift(f.s.c), p.s.c, control = control, verbose = 0)
+chrom.mle.d.s.c <- find.mle(f.s.c, coef(chrom.mle.s.c, TRUE), control = control, verbose = 0)
+chrom.mle.h.c <- find.mle(nodrift(f.h.c), p.h.c, control = control, verbose = 0)
+chrom.mle.d.h.c <- find.mle(f.h.c, coef(chrom.mle.h.c, TRUE), control = control, verbose = 0)
+
+
+chrom.anova <- anova(chrom.mle.c.c, OU.constant.constant = chrom.mle.d.c.c, BM.linear.constant = chrom.mle.l.c, OU.linear.constant = chrom.mle.d.l.c, BM.sigmoid.constant = chrom.mle.s.c, OU.sigmoid.constant = chrom.mle.d.s.c, BM.hump.constant = chrom.mle.h.c, OU.hump.constant = chrom.mle.d.h.c)
+
+chrom.anova
+
+save.image(file="myEnvironment.RData")
+```
+
+
+Let's check the results
+
+```{r}
+
+load(file="myEnvironment.RData")
+
+#printing results
+states.seq <- seq(min(states),max(states))
+lambda.d.h.c <- noroptimal.x(states.seq, chrom.mle.d.h.c$par[1], chrom.mle.d.h.c$par[2], chrom.mle.d.h.c$par[3], chrom.mle.d.h.c$par[4])
+plot(states.seq, lambda.d.h.c, type = "l")
+lambda.d.c.c <- constant.x(states.seq, chrom.mle.d.c.c$par[1])
+plot(states.seq, lambda.d.c.c, type = "l")
+lambda.d.s.c <- sigmoid.x(states.seq, chrom.mle.d.s.c$par[1], chrom.mle.d.s.c$par[2], chrom.mle.d.s.c$par[3], chrom.mle.d.s.c$par[4])
+plot(states.seq, lambda.d.s.c, type = "l")
+lambda.d.l.c <- linear.x(states.seq, chrom.mle.d.l.c$par[1], chrom.mle.d.l.c$par[2])
+plot(states.seq, lambda.d.l.c, type = "l")
+
+lambda.h.c <- noroptimal.x(states.seq, chrom.mle.h.c$par[1], chrom.mle.h.c$par[2], chrom.mle.h.c$par[3], chrom.mle.h.c$par[4])
+plot(states.seq, lambda.h.c, type = "l")
+lambda.c.c <- constant.x(states.seq, chrom.mle.c.c$par[1])
+plot(states.seq, lambda.c.c, type = "l")
+lambda.s.c <- sigmoid.x(states.seq, chrom.mle.s.c$par[1], chrom.mle.s.c$par[2], chrom.mle.s.c$par[3], chrom.mle.s.c$par[4])
+plot(states.seq, lambda.s.c, type = "l")
+lambda.l.c <- linear.x(states.seq, chrom.mle.l.c$par[1], chrom.mle.l.c$par[2])
+plot(states.seq, lambda.l.c, type = "l")
+
+# the plot of the current best model... it's little rare, the peak is too much strong
+
+save.image(file="myEnvironment.RData")
+
+```
+
+Let's explore more models
+
+```{r}
+
+load(file="myEnvironment.RData")
+
+
+f.c.l <- make(constant.x, linear.x)
+f.c.s <- make(constant.x, sigmoid.x) 
+f.c.h <- make(constant.x, noroptimal.x) 
+
+p.c.l <- c(p.c[1:2], m.m = 0, p.c[3]) 
+p.c.l
+p.c.s <- c(p.c[1:2], p.c[2], mean(states), 1, p.c[3])
+p.c.s
+p.c.h <- c(p.c[1:2], p.c[2], mean(states), 1, p.c[3])
+p.c.h
+
+chrom.mle.c.l <- find.mle(nodrift(f.c.l), p.c.l, control = control, verbose = 0)
+chrom.mle.d.c.l <- find.mle(f.c.l, coef(chrom.mle.c.l, TRUE), control = control, verbose = 0)
+chrom.mle.c.s <- find.mle(nodrift(f.c.s), p.c.s, control = control, verbose = 0)
+chrom.mle.d.c.s <- find.mle(f.c.s, coef(chrom.mle.c.s, TRUE), control = control, verbose = 0)
+chrom.mle.c.h <- find.mle(nodrift(f.c.h), p.c.h, control = control, verbose = 0)
+chrom.mle.d.c.h <- find.mle(f.c.h, coef(chrom.mle.c.h, TRUE), control = control, verbose = 0)
+
+
+chrom.anova2 <- anova(chrom.mle.c.c, OU.constant.constant = chrom.mle.d.c.c, BM.linear.constant = chrom.mle.l.c, BM.constant.linear = chrom.mle.c.l, OU.linear.constant = chrom.mle.d.l.c, OU.constant.linear = chrom.mle.d.c.l, BM.sigmoid.constant = chrom.mle.s.c, OU.sigmoid.constant = chrom.mle.d.s.c, BM.constant.sigmoid = chrom.mle.c.s, OU.constant.sigmoid = chrom.mle.d.c.s, BM.hump.constant = chrom.mle.h.c, OU.hump.constant = chrom.mle.d.h.c, BM.constant.hump = chrom.mle.c.h, OU.constant.hump = chrom.mle.d.c.h)
+
+
+chrom.anova2
+
+
+save.image(file="myEnvironment.RData")
+
+```
+
+
+Let's explore more complex models
+
+```{r}
+library(diversitree)
+
+f.h.l <- make(noroptimal.x, linear.x)
+f.h.s <- make(noroptimal.x, sigmoid.x) 
+f.l.l <- make(linear.x, linear.x)
+f.l.s <- make(linear.x, sigmoid.x) 
+f.s.l <- make(sigmoid.x, linear.x)
+f.s.s <- make(sigmoid.x, sigmoid.x) 
+
+p.h.l <- c(p.c[1], p.c[1], mean(states), 1,p.c[2], m.m = 0, p.c[3])
+p.h.l
+p.h.s <- c(p.c[1], p.c[1], mean(states), 1,p.c[2], p.c[2], mean(states), 1, p.c[3])
+p.h.s
+p.l.l <- c(p.c[1], l.m = 0, p.c[2], m.m = 0, p.c[3])
+p.l.l
+p.l.s <- c(p.c[1], l.m = 0, p.c[2], p.c[2], mean(states), 1, p.c[3])
+p.l.s 
+p.s.l <- c(p.c[1], p.c[1], mean(states), 1, p.c[2], m.m = 0, p.c[3])
+p.s.l  
+p.s.s <- c(p.c[1], p.c[1], mean(states), 1, p.c[2], p.c[2], mean(states), 1, p.c[3])
+p.s.s
+
+chrom.mle.h.l <- find.mle(nodrift(f.h.l), p.h.l, control = control, verbose = 0)
+chrom.mle.d.h.l <- find.mle(f.h.l, coef(chrom.mle.h.l, TRUE), control = control, verbose = 0)
+chrom.mle.h.s <- find.mle(nodrift(f.h.s), p.h.s, control = control, verbose = 0)
+chrom.mle.d.h.s <- find.mle(f.h.s, coef(chrom.mle.h.s, TRUE), control = control, verbose = 0)
+chrom.mle.l.l <- find.mle(nodrift(f.l.l), p.l.l, control = control, verbose = 0)
+chrom.mle.d.l.l <- find.mle(f.l.l, coef(chrom.mle.l.l, TRUE), control = control, verbose = 0)
+chrom.mle.l.s <- find.mle(nodrift(f.l.s), p.l.s, control = control, verbose = 0)
+chrom.mle.d.l.s <- find.mle(f.l.s, coef(chrom.mle.l.s, TRUE), control = control, verbose = 0)
+chrom.mle.s.l <- find.mle(nodrift(f.s.l), p.s.l, control = control, verbose = 0)
+chrom.mle.d.s.l <- find.mle(f.s.l, coef(chrom.mle.s.l, TRUE), control = control, verbose = 0)
+chrom.mle.s.s <- find.mle(nodrift(f.s.s), p.s.s, control = control, verbose = 0)
+chrom.mle.d.s.s <- find.mle(f.s.s, coef(chrom.mle.s.s, TRUE), control = control, verbose = 0)
+
+
+chrom.anova3 <- anova(chrom.mle.c.c, OU.constant.constant = chrom.mle.d.c.c, BM.linear.constant = chrom.mle.l.c, BM.constant.linear = chrom.mle.c.l, OU.linear.constant = chrom.mle.d.l.c, OU.constant.linear = chrom.mle.d.c.l, BM.sigmoid.constant = chrom.mle.s.c, OU.sigmoid.constant = chrom.mle.d.s.c, BM.constant.sigmoid = chrom.mle.c.s, OU.constant.sigmoid = chrom.mle.d.c.s, BM.hump.constant = chrom.mle.h.c, OU.hump.constant = chrom.mle.d.h.c, BM.constant.hump = chrom.mle.c.h, OU.constant.hump = chrom.mle.d.c.h, BM.hump.linear = chrom.mle.h.l, BM.hump.sigmoid = chrom.mle.h.s, BM.linear.linear = chrom.mle.l.l, BM.linear.sigmoid = chrom.mle.l.s, BM.sigmoid.linear = chrom.mle.s.l, BM.sigmoid.sigmoid = chrom.mle.s.s, OU.hump.linear = chrom.mle.d.h.l, OU.hump.sigmoid = chrom.mle.d.h.s, OU.linear.linear = chrom.mle.d.l.l, OU.linear.sigmoid = chrom.mle.d.l.s, OU.sigmoid.linear = chrom.mle.d.s.l, OU.sigmoid.sigmoid = chrom.mle.d.s.s)
+
+
+chrom.anova3
+
+
+save.image(file="myEnvironment.RData")
+
+
+```
+
+Printing the best model
+
+```{r}
+
+load(file="myEnvironment.RData")
+
+#printing results based on new results, sigmoid extinction
+#please confirm these lines are correct
+#mu.c <- constant.x(states.seq, chrom.mle.h.c$par[5])
+#plot(states.seq, mu.c, type = "l")
+#lambda.h <- noroptimal.x(states.seq, chrom.mle.h.c$par[1], chrom.mle.h.c$par[2], chrom.mle.h.c$par[3], chrom.mle.h.c$par[4])
+#plot(states.seq, lambda.h, type = "l")
+#diversification <- noroptimal.x(states.seq, chrom.mle.h.c$par[1]-chrom.mle.h.c$par[5], chrom.mle.h.c$par[2]-chrom.mle.h.c$par[5], chrom.mle.h.c$par[3], chrom.mle.h.c$par[4]) #Subtract extinction to speciation
+#plot(states.seq, diversification, type = "l")
+
+lambda.d.s.s <- sigmoid.x(states.seq, chrom.mle.d.s.s$par[1], chrom.mle.d.s.s$par[2], chrom.mle.d.s.s$par[3], chrom.mle.d.s.s$par[4])
+plot(states.seq, lambda.d.s.s, type="l", ylim=c(0,2.5))
+
+mu.d.s.s <- sigmoid.x(states.seq, chrom.mle.d.s.s$par[5], chrom.mle.d.s.s$par[6], chrom.mle.d.s.s$par[7], chrom.mle.d.s.s$par[8])
+plot(states.seq, mu.d.s.s, type="l", ylim=c(0,2.5))
+
+div <- lambda.d.s.s - mu.d.s.s
+
+plot(states.seq, div, type="l", ylim=c(0,2.5))
+
+write.csv2(chrom.anova3, "chrom.anova.csv")
+
+save.image(file="myEnvironment.RData")
+
+```
+
